@@ -602,6 +602,15 @@ func assignRecords(m map[string]interface{}, record map[string]interface{}) erro
 					targetMap.SetMapIndex(reflect.ValueOf(k), reflect.ValueOf(v))
 				}
 				record[k] = targetMap.Interface()
+			case modifierMapSetField:
+				key := v.args[0].(string)
+				value := v.args[1]
+				r := make(map[string]interface{})
+				if record[k] != nil {
+					r = record[k].(map[string]interface{})
+				}
+				r[key] = value
+				record[k] = r
 			case modifierCounterIncrement:
 				oldV, _ := record[k].(int64)
 				delta := int64(v.args[0].(int))
