@@ -374,6 +374,10 @@ type QueryExecutor interface {
 	ExecuteAtomicallyWithOptions(opts Options, stmts []Statement) error
 }
 
+type CustomUDT interface {
+	CqlTypeString() string
+}
+
 type Counter int
 
 // Buckets is an iterator over a timeseries' buckets

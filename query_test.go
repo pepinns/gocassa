@@ -9,12 +9,33 @@ import (
 	"testing"
 	"time"
 
+	"encoding/json"
 	"github.com/gocql/gocql"
 )
 
 type Customer struct {
-	Id   string
-	Name string
+	Id      string
+	Name    string
+	Details *CustomerDetails
+}
+
+type CustomerDetails struct {
+	Age      int
+	Location string
+}
+
+func (me *CustomerDetails) UnmarshalCQL(_ gocql.TypeInfo, data []byte) error {
+	err := json.Unmarshal(data, me)
+	if err != nil {
+		fmt.Printf("Error unmarshaling data: %s\n", err)
+	}
+	return err
+}
+func (me CustomerDetails) MarshalCQL(_ gocql.TypeInfo) ([]byte, error) {
+	return json.Marshal(&me)
+}
+func (me CustomerDetails) CqlTypeString() string {
+	return gocql.TypeText.String()
 }
 
 var ns KeySpace
@@ -66,6 +87,10 @@ func TestEq(t *testing.T) {
 	err := cs.Set(Customer{
 		Id:   "50",
 		Name: "Joe",
+		Details: &CustomerDetails{
+			Age:      23,
+			Location: "NYC",
+		},
 	}).Run()
 	if err != nil {
 		t.Fatal(err)
@@ -79,6 +104,13 @@ func TestEq(t *testing.T) {
 		t.Fatal("Not found")
 	}
 	if (*res)[0].Id != "50" {
+		t.Fatal((*res)[0])
+	}
+	resultDetails := (*res)[0].Details
+	if resultDetails.Age != 23 {
+		t.Fatal((*res)[0])
+	}
+	if resultDetails.Location != "NYC" {
 		t.Fatal((*res)[0])
 	}
 }

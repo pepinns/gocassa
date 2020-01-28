@@ -152,6 +152,9 @@ func cassaType(i interface{}) gocql.Type {
 }
 
 func stringTypeOf(i interface{}) (string, error) {
+	if custom, ok := i.(CustomUDT); ok {
+		return custom.CqlTypeString(), nil
+	}
 	_, isByteSlice := i.([]byte)
 	if !isByteSlice {
 		// Check if we found a higher kinded type
