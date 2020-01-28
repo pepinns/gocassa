@@ -123,6 +123,15 @@ func transformFields(m map[string]interface{}) {
 		}
 	}
 }
+func hasCounter(m map[string]interface{}) bool {
+	for _, v := range m {
+		switch v.(type) {
+		case Counter:
+			return true
+		}
+	}
+	return false
+}
 
 // INSERT INTO Hollywood.NerdMovies (user_uuid, fan)
 //   VALUES ('cfd66ccc-d857-4e90-b1e5-df98a3d40cd6', 'johndoe')
@@ -158,6 +167,11 @@ func (t t) Set(i interface{}) Op {
 	m, ok := toMap(i)
 	if !ok {
 		panic("SetWithOptions: Incompatible type")
+	}
+	if !hasCounter(m) {
+		return newWriteOp(t.keySpace.qe, filter{
+			t: t,
+		}, insertOpType, m)
 	}
 	ks := append(t.info.keys.PartitionKeys, t.info.keys.ClusteringColumns...)
 	updFields := removeFields(m, ks)
